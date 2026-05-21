@@ -80,13 +80,13 @@ internal sealed unsafe partial class UnixRawModeHelper : IDisposable
     [StructLayout(LayoutKind.Sequential)]
     private struct Termios
     {
-        public uint c_iflag;
-        public uint c_oflag;
-        public uint c_cflag;
-        public uint c_lflag;
-        public fixed byte c_cc[32];
-        public uint c_ispeed;
-        public uint c_ospeed;
+        public ulong c_iflag;
+        public ulong c_oflag;
+        public ulong c_cflag;
+        public ulong c_lflag;
+        public fixed byte c_cc[20];
+        public ulong c_ispeed;
+        public ulong c_ospeed;
     }
 
     private const int STDIN_FILENO = 0;
