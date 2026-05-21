@@ -3,13 +3,23 @@ using System.Runtime.InteropServices;
 
 namespace Fabs.Tui.Terminal;
 
+#if OSX
+using cc_t = byte;
+using tc_flagt = ulong;
+using tc_speedt = ulong;
+#else
+using cc_t = uint;
+using tc_flagt = uint;
+using tc_speedt = uint;
+#endif
+
 internal sealed unsafe partial class UnixRawModeHelper : IDisposable
 {
     private Termios _originalTermios;
     private int _fd = -1;
 
     public bool IsRawModeEnabled { get; private set; }
-
+    public int TermiosFD => _fd;
     public bool EnableRawMode()
     {
         if (IsRawModeEnabled) return IsRawModeEnabled;
@@ -74,19 +84,28 @@ internal sealed unsafe partial class UnixRawModeHelper : IDisposable
 
     public void Dispose()
     {
+        if (!IsRawModeEnabled) return;
 
+        tcsetattr(_fd, TCSANOW, ref _originalTermios);
+        IsRawModeEnabled = false;
     }
 
+
+
     [StructLayout(LayoutKind.Sequential)]
-    private struct Termios
+    public unsafe struct Termios
     {
-        public ulong c_iflag;
-        public ulong c_oflag;
-        public ulong c_cflag;
-        public ulong c_lflag;
-        public fixed byte c_cc[20];
-        public ulong c_ispeed;
-        public ulong c_ospeed;
+        public tc_flagt c_iflag;
+        public tc_flagt c_oflag;
+        public tc_flagt c_cflag;
+        public tc_flagt c_lflag;
+#if OSX
+        public fixed cc_t c_cc[20];
+#else
+        public fixed cc_t c_cc[32];
+#endif
+        public tc_speedt c_ispeed;
+        public tc_speedt c_ospeed;
     }
 
     private const int STDIN_FILENO = 0;
@@ -118,6 +137,4 @@ internal sealed unsafe partial class UnixRawModeHelper : IDisposable
     [LibraryImport("libc", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
     private static partial int open(string path, int oflag);
 
-    [LibraryImport("libc", SetLastError = true)]
-    private static partial int close(int fd);
 }

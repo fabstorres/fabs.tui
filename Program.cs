@@ -1,13 +1,8 @@
 ﻿using System.Text;
 using Fabs.Tui.Terminal;
-// Console.WriteLine("Before enabling raw mode.");
-var unixHelper = new UnixRawModeHelper();
-var terminal = new UnixTerminal();
 
-var result = unixHelper.EnableRawMode();
-// Remove the usage of Console
-// if (!result) Console.Out.Write("Failed to enable raw mode.\r\n");
-// else Console.Out.Write("Raw mode enabled.\r\n");
+var terminal = new UnixTerminal();
+terminal.EnableRawMode();
 
 var buffer = new byte[1024];
 
@@ -18,4 +13,7 @@ while (true)
     var n = terminal.Read(buffer);
     if (n <= 0) break;
     if (buffer[0] == 'q') break;
+    terminal.Write(buffer);
 }
+
+terminal.DisableRawMode();

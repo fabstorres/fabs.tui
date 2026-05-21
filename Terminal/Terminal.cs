@@ -5,6 +5,8 @@ namespace Fabs.Tui.Terminal;
 
 public interface ITerminal
 {
+    bool EnableRawMode();
+    void DisableRawMode();
     int Read(Span<byte> buffer);
     void Write(ReadOnlySpan<byte> buffer);
 }
@@ -12,14 +14,23 @@ public interface ITerminal
 
 public unsafe partial class UnixTerminal : ITerminal
 {
+    private readonly UnixRawModeHelper _rawModeHelper = new();
+    public bool EnableRawMode()
+    {
+        return _rawModeHelper.EnableRawMode();
+    }
+
+    public void DisableRawMode()
+    {
+        _rawModeHelper.Dispose();
+    }
+
     public int Read(Span<byte> buffer)
     {
-        var fd = open("/dev/tty", 0);
-        if (fd < 0) return 0;
 
         fixed (byte* ptr = buffer)
         {
-            return read(fd, ptr, (uint)buffer.Length);
+            return read(_rawModeHelper.TermiosFD, ptr, (uint)buffer.Length);
         }
     }
 
@@ -34,9 +45,6 @@ public unsafe partial class UnixTerminal : ITerminal
             }
         }
     }
-
-    [LibraryImport("libc", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
-    private static partial int open(string path, int oflag);
 
     [LibraryImport("libc", SetLastError = true)]
     private static partial int write(int fd, byte* buffer, uint count);
