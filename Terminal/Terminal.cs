@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Fabs.Tui.Terminal;
 
-public interface ITerminal
+public interface ITerminalDriver
 {
     bool EnableRawMode();
     void DisableRawMode();
@@ -12,7 +12,7 @@ public interface ITerminal
 }
 
 
-public unsafe partial class UnixTerminal : ITerminal
+public unsafe partial class UnixTerminalDriver : ITerminalDriver
 {
     private readonly UnixRawModeHelper _rawModeHelper = new();
     public bool EnableRawMode()
