@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Fabs.Tui.Terminal;
 
-var terminal = new UnixTerminal();
+var terminal = new UnixTerminalDriver();
 terminal.EnableRawMode();
 
 var buffer = new byte[1024];
