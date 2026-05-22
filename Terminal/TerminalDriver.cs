@@ -1,5 +1,6 @@
 
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Fabs.Tui.Terminal;
 
@@ -9,6 +10,7 @@ public interface ITerminalDriver
     void DisableRawMode();
     int Read(Span<byte> buffer);
     void Write(ReadOnlySpan<byte> buffer);
+    (int rows, int columns) GetWindowSize();
 }
 
 
@@ -51,4 +53,34 @@ public unsafe partial class UnixTerminalDriver : ITerminalDriver
 
     [LibraryImport("libc", SetLastError = true)]
     private static partial int read(int fd, byte* buffer, uint count);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct WinSize
+    {
+        public ushort ws_row;
+        public ushort ws_col;
+        public ushort ws_xpixel;
+        public ushort ws_ypixel;
+    }
+
+    [LibraryImport("libc", SetLastError = true)]
+    private static partial int ioctl(
+        int fd,
+        ulong request,
+        out WinSize ws);
+
+    /// <remarks>
+    /// Currently unstable do not rely on this method.
+    /// </remarks>
+    public (int rows, int columns) GetWindowSize()
+    {
+        var result = ioctl(_rawModeHelper.TermiosFD, 0x5413, out var ws);
+        if (result < 0)
+        {
+            Write(Encoding.UTF8.GetBytes($"ioctl failed: {Marshal.GetLastPInvokeError()}\r\n"));
+            //throw new System.ComponentModel.Win32Exception(Marshal.GetLastPInvokeError());
+            return (24, 80);
+        }
+        return (ws.ws_row, ws.ws_col);
+    }
 }

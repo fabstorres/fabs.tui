@@ -88,6 +88,6 @@ public class ProcessTerminal : IVirtualTerminal
         _driver?.Write(Encoding.UTF8.GetBytes("\x1b[?25h"));
     }
 
-    public int Columns => 24;
-    public int Rows => 80;
+    public int Columns => Console.WindowWidth;
+    public int Rows => Console.WindowHeight;
 }
